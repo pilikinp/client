@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>794</width>
-    <height>756</height>
+    <width>504</width>
+    <height>671</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,11 +15,11 @@
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
-    <layout class="QVBoxLayout" name="verticalLayout_6">
+    <layout class="QVBoxLayout" name="verticalLayout_4">
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
-        <layout class="QVBoxLayout" name="verticalLayout_4">
+        <layout class="QHBoxLayout" name="horizontalLayout_5">
          <item>
           <widget class="QLabel" name="label_3">
            <property name="text">
@@ -28,9 +28,23 @@
           </widget>
          </item>
          <item>
+          <widget class="QLineEdit" name="topic"/>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
           <widget class="QLabel" name="label">
            <property name="text">
             <string>Дата начала:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QDateEdit" name="dateEdit">
+           <property name="calendarPopup">
+            <bool>true</bool>
            </property>
           </widget>
          </item>
@@ -41,18 +55,12 @@
            </property>
           </widget>
          </item>
-        </layout>
-       </item>
-       <item>
-        <layout class="QVBoxLayout" name="verticalLayout_2">
          <item>
-          <widget class="QLineEdit" name="topic"/>
-         </item>
-         <item>
-          <widget class="QLineEdit" name="dateStart"/>
-         </item>
-         <item>
-          <widget class="QLineEdit" name="dateFinish"/>
+          <widget class="QDateEdit" name="dateEdit_2">
+           <property name="calendarPopup">
+            <bool>true</bool>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>
@@ -117,7 +125,11 @@
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="alarmDate"/>
+        <widget class="QDateEdit" name="dateEdit_3">
+         <property name="calendarPopup">
+          <bool>true</bool>
+         </property>
+        </widget>
        </item>
        <item>
         <widget class="QLabel" name="label_7">
@@ -127,7 +139,11 @@
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="alarmTime"/>
+        <widget class="QTimeEdit" name="timeEdit">
+         <property name="calendarPopup">
+          <bool>true</bool>
+         </property>
+        </widget>
        </item>
       </layout>
      </item>
