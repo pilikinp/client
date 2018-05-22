@@ -1,4 +1,4 @@
-stus = {'waiting', 'doing', 'done'}
+status = {'waiting', 'doing', 'done'}
 
 
 class Task:
