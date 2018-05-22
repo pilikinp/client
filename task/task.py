@@ -1,3 +1,6 @@
+import time
+from .utils import act_time
+
 status = {'waiting', 'doing', 'done'}
 
 
@@ -13,7 +16,18 @@ class Task:
         self.viewer = viewer
         self._task_name = 'Новая задача' if not task_name else task_name
         self._text = None
+        self._creating_time = time.time()
+        self.deadline_time = None
         self.status = 'waiting'
+        self._implementors = [creator]
+
+    def __repr__(self):
+        return 'Task: {} / creator: {} / created: {} /\n' \
+               'text: {} / implementers: {}'.format(self._task_name,
+                                                    self._creator,
+                                                    self._creating_time,
+                                                    self._text,
+                                                    self._implementors)
 
     @property
     def creator(self):
