@@ -1,7 +1,7 @@
 import time
-from .utils import act_time
+from utils import act_time
 
-status = {'waiting', 'doing', 'done'}
+status = {'waiting', 'doing', 'done'}  # статус задачи, по умолчанию в ожидании
 
 
 class Task:
@@ -25,7 +25,7 @@ class Task:
         return 'Task: {} / creator: {} / created: {} /\n' \
                'text: {} / implementers: {}'.format(self._task_name,
                                                     self._creator,
-                                                    self._creating_time,
+                                                    act_time(self._creating_time),
                                                     self._text,
                                                     self._implementors)
 
@@ -34,8 +34,8 @@ class Task:
         return self._creator
 
     @creator.setter
-    def creator(self, value):
-        print("Creator couldn't be set")
+    def creator(self, value=None):
+        print("<Creator couldn't be set>")
 
     @creator.getter
     def creator(self):
@@ -48,26 +48,37 @@ class Task:
     @text.setter
     def text(self, text):
         if self._creator != self.viewer:
-            print('Only creator could set text')
+            print('<Only creator could set text>')
         else:
             self._text = text
 
+    # TODO протестировать изменение текста в qt форме / сделать подтверждение изменения текста задачи
     def text_edit(self):
-        if self._creator != self.viewer:
-            print('Only creator could edit text')
-        else:
-            original_text = self._text
-            editing = input('давайте редактировать: ')  # обрабатываем исходный текст задачи
-            self._text = original_text
+        '''
+        при вызове метода подразумевается, что пользователю становится доступен текст задачи self._text, который
+        сохраняется в original_text и доступен для изменения (например в каком-либо QT виджете).
+        :return:
+        '''
+        original_text = self._text
+        # обрабатываем исходный текст задачи
+        edited_text = original_text + ' _and edited!'
+        # переопределяем соответствующее поле
+        self.text = edited_text
+
+    def add_implementor(self, user):
+        if user not in self._implementors:
+            self._implementors.append(user)
+
+    def del_implementor(self, user):
+        pass
 
 
 if __name__ == '__main__':
-    task = Task(creator='Jack', viewer='Jack11', task_name='New one')
-    print(task.creator)
+    task = Task(creator='Jack', viewer='Jack', task_name='New 11one')
 
-    task.text = 'kjdhkfjhg'
-    print(task.text)
+    task.text = 'description of task'
 
+    task.viewer = 'Bob'
     task.text_edit()
 
-    print(task.text)
+    print(task)
