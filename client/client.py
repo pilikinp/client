@@ -3,11 +3,9 @@ import socket
 import threading, queue
 import hashlib
 
-from jim.jim import JimRequest, JimResponse
+from jim.convert import json_to_bytes, bytes_to_json
 
 class Client():
-    request = JimRequest()
-    response = JimResponse()
 
     username = ''
 
@@ -52,7 +50,37 @@ class Client():
             print(msg)
 
     def registration(self, name, password, email):
-        pass
+        pas = hashlib.sha256()
+        pas.update(self.username.encode())
+        pas.update(password.encode())
+        pas.update(self.secret.encode())
+        password = pas.hexdigest()
+        message = {
+            "head": {
+                "type": "action",
+                "name": "registration"
+            },
+            "body": {
+                "name": name,
+                "password": password
+            }
+        }
+        message = json_to_bytes(message)
+        self.socket.send(message)
+
+    def check_user(self, name):
+        message = {
+            "head": {
+                "type": "action",
+                "name": "check_user"
+            },
+            "body": {
+                "name": name
+            }
+        }
+        msg = json_to_bytes(message)
+        # time.sleep(0.2)  # непонятная задержка которая нужна при JSON
+        self.socket.send(msg)
 
     def add_task(self):
         # функция добавления задачи
@@ -69,9 +97,9 @@ class Client():
             try:
                 sock.settimeout(12)
                 data_recv = sock.recv(1024)
-                data_recv = JimRequest.unpack(data_recv)
-                data = data_recv['data']
-                print(data_recv)
+                data_recv = bytes_to_json(data_recv)
+                self.recv_queue.put(data_recv)
+
             except socket.timeout:
                 pass
 
@@ -85,6 +113,6 @@ class Client():
         try:
             self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.connect((self._host, self._port))
-            return 'соединение установлено'
+            self.start_thread()
         except:
             return 'Сервер не отвечает'

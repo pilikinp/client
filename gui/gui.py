@@ -1,6 +1,6 @@
 import sys
 
-from PyQt5 import QtCore, QtWidgets, uic
+from PyQt5 import QtCore, QtWidgets, uic, QtGui
 from gui.main_form import Ui_MainWindow as ui_class
 
 from gui.monitor import Monitor
@@ -18,10 +18,23 @@ class MyWindow(QtWidgets.QMainWindow):
 
         self.monitor = Monitor(self)
         self.thread = QtCore.QThread()
+        self.start_monitor(QtWidgets.QDialog())
 
-        self.monitor.gotData.connect(self.resp)
+        self.monitor.gotCheck.connect(self.update_console)
+        self.monitor.gotError.connect(self.update_error)
 
         self.sign_in()
+
+    def start_monitor(self, dialog):
+        self.monitor.moveToThread(self.thread)
+        self.thread.started.connect(self.monitor.recv_msg)
+        self.thread.start()
+        connect = self.monitor.client.run()
+        if connect:
+            QtWidgets.QMessageBox.warning(dialog, 'Warning!', 'Not connect')
+            sys.exit()
+
+
 
     @staticmethod
     def fields_checker(name, password, dialog):
@@ -32,22 +45,45 @@ class MyWindow(QtWidgets.QMainWindow):
         elif not password:
             QtWidgets.QMessageBox.warning(dialog, 'Warning!', 'Password is missing')
         else:
-            dialog.ok.clicked.connect(dialog.accept)   # bug: you should  click twice on 'ok' button
+            dialog.accept()
 
     def registration(self):
         dialog_reg = uic.loadUi('gui/sign_up.ui')
-        self.monitor.moveToThread(self.thread)
-        self.thread.started.connect(self.monitor.recv_msg)
         dialog_reg.login.setFocus()
+        dialog_reg.flag = None
 
         def reg():
             name = dialog_reg.login.text()
             password = dialog_reg.password.text()
             email = dialog_reg.email.text()
             self.fields_checker(name, password, dialog_reg)
+            if dialog_reg.flag:
+                self.monitor.client.registration(name, password, email)
+            else:
+                QtWidgets.QMessageBox.warning(dialog_reg, 'Warning!', 'Uncorrect name')
+                self.registration()
 
+        def check_login(monitor):
+            text = dialog_reg.login.text()
+            monitor.client.check_user(text)
+
+        @QtCore.pyqtSlot(dict)
+        def label_check_user(body):
+            if body['code'] == 200:
+                pixmap = QtGui.QPixmap('gui/icon/ok.png')
+                dialog_reg.label_4.resize(23, 23)
+                dialog_reg.label_4.setPixmap(pixmap)
+                dialog_reg.flag = True
+            else:
+                pixmap = QtGui.QPixmap('gui/icon/error.png')
+                dialog_reg.label_4.resize(23, 23)
+                dialog_reg.label_4.setPixmap(pixmap)
+                dialog_reg.flag = None
+
+
+        self.monitor.gotCheck.connect(label_check_user)
+        dialog_reg.login.textChanged.connect(lambda: check_login(self.monitor))
         dialog_reg.ok.clicked.connect(reg)
-#        dialog_reg.ok.clicked.connect(dialog_reg.accept)
         dialog_reg.cancel.clicked.connect(dialog_reg.close)
         dialog_reg.cancel.clicked.connect(self.sign_in)
         dialog_reg.exec()
@@ -55,19 +91,14 @@ class MyWindow(QtWidgets.QMainWindow):
     def sign_in(self):
 
         dialog = uic.loadUi('gui/sign_in.ui')
-        self.monitor.moveToThread(self.thread)
-        self.thread.started.connect(self.monitor.recv_msg)
         dialog.login.setFocus()
 
         def login():
             name = dialog.login.text()
             password = dialog.password.text()
             self.fields_checker(name, password, dialog)
-#            self.monitor.client.connect_guest(name, password)
-            self.thread.start()
 
         dialog.ok.clicked.connect(login)
-#        dialog.ok.clicked.connect(dialog.accept)
         dialog.registration.clicked.connect(dialog.close)
         dialog.registration.clicked.connect(self.registration)
         dialog.cancel.clicked.connect(sys.exit)
@@ -84,6 +115,14 @@ class MyWindow(QtWidgets.QMainWindow):
         dialog.addTask.clicked.connect(dialog.accept)
         dialog.exec()
 
-    def resp(self):
-        pass
         ################################################
+
+    @QtCore.pyqtSlot(dict)
+    def update_console(self, body):
+        self.ui.statusbar.showMessage('{} - {}'.format(body['code'], body['message']))
+
+    @QtCore.pyqtSlot(dict)
+    def update_error(self, body):
+        QtWidgets.QMessageBox.warning(QtWidgets.QDialog(), 'Warning!', body['message'])
+        # sys.exit()
+        self.registration()
