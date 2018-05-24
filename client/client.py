@@ -22,32 +22,7 @@ class Client():
 
     def connect_guest(self, name, password):
         # Функция авторизации пользователя
-        self.username = name
-        pas = hashlib.sha256()
-        pas.update(self.username.encode())
-        pas.update(password.encode())
-        pas.update(self.secret.encode())
-        password = pas.hexdigest()
-        msg = self.run()
-        if msg == 'соединение установлено':
-            data = {'action': 'sign in',
-                    'time': time.ctime(),
-                    'data':{'user': self.username,
-                    'password': password}}
-            self.socket.send(self.request.pack(data))
-            print('сообщение отправлено')
-
-            msg_recv = self.socket.recv(4096)
-            msg_recv = self.response.unpack(msg_recv)
-
-            print(msg_recv)
-            # if msg_recv['response'] == '102':
-            #             #     print(msg_recv['data']['alert'])
-            #             #     self.start_thread()
-
-            # self.recv_queue.put(msg_recv)
-        else:
-            print(msg)
+        pass
 
     def registration(self, name, password, email):
         pas = hashlib.sha256()
