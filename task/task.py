@@ -1,12 +1,12 @@
 import time
 from utils import act_time
 
-status = {'waiting', 'doing', 'done'}  # статус задачи, по умолчанию в ожидании
+status = {0: 'waiting', 1: 'doing', 2: 'done'}  # статус задачи, по умолчанию в ожидании
 
 
 class Task:
 
-    def __init__(self, creator, viewer=None, task_name=None):
+    def __init__(self, creator, viewer=None, name=None):
         '''
         :param creator: объект класса Пользователь (?) создатель задачи
         :param viewer: объект класса Пользователь (?) кто просматривает задачу
@@ -14,20 +14,28 @@ class Task:
         '''
         self._creator = creator
         self.viewer = viewer
-        self._task_name = 'Новая задача' if not task_name else task_name
-        self._text = None
-        self._creating_time = time.time()
+        self._name = 'New task' if not name else name  # если задача с таким именем уже есть добавить суффикс _1(2, 3...)
+        self._description = None
+        self._time = time.time()
         self.deadline_time = None
-        self.status = 'waiting'
-        self._implementors = [creator]
+        self.status = 0
+        self._performer_user = [creator]  # список пользователей, которым задача сопоставленна
+        self._access_users = [creator]  # список пользователе у которых есть доступ к задаче
+        self._comments = dict()
 
     def __repr__(self):
-        return 'Task: {} / creator: {} / created: {} /\n' \
-               'text: {} / implementers: {}'.format(self._task_name,
-                                                    self._creator,
-                                                    act_time(self._creating_time),
-                                                    self._text,
-                                                    self._implementors)
+        return 'Task: {name} / creator: {creator} / created: {time} / deadline: {deadline}\n \
+status: {status} / description: {description}\n \
+performers: {performers} / access: {access}\n \
+comments: {comments}'.format(name=self._name,
+                             creator=self._creator,
+                             time=act_time(self._time),
+                             deadline=self.deadline_time,
+                             status=self.status,
+                             description=self._description,
+                             performers=self._performer_user,
+                             access=self._access_users,
+                             comments=self._comments)
 
     @property
     def creator(self):
@@ -42,43 +50,47 @@ class Task:
         return self._creator
 
     @property
-    def text(self):
-        return self._text
+    def description(self):
+        return self._description
 
-    @text.setter
-    def text(self, text):
+    @description.setter
+    def description(self, text):
         if self._creator != self.viewer:
             print('<Only creator could set text>')
         else:
-            self._text = text
+            self._description = text
 
     # TODO протестировать изменение текста в qt форме / сделать подтверждение изменения текста задачи
-    def text_edit(self):
+    def description_edit(self):
         '''
         при вызове метода подразумевается, что пользователю становится доступен текст задачи self._text, который
         сохраняется в original_text и доступен для изменения (например в каком-либо QT виджете).
         :return:
         '''
-        original_text = self._text
+        original_description = self._description
         # обрабатываем исходный текст задачи
-        edited_text = original_text + ' _and edited!'
+        edited_description = original_description + ' _and edited!'
         # переопределяем соответствующее поле
-        self.text = edited_text
+        self.description = edited_description
 
-    def add_implementor(self, user):
-        if user not in self._implementors:
-            self._implementors.append(user)
+    # добавление исполнителя
+    def add_performer(self, user):
+        if user not in self._performer_user:
+            self._performer_user.append(user)
 
-    def del_implementor(self, user):
-        pass
+    def del_performer(self, user):
+        if user == self.creator:
+            print('<Creator could not be removed>')
+        else:
+            self._performer_user.remove(user)
 
 
 if __name__ == '__main__':
-    task = Task(creator='Jack', viewer='Jack', task_name='New 11one')
+    task = Task(creator='Jack', viewer='Jack', name='New one')
 
-    task.text = 'description of task'
+    task.description = 'description of task'
 
     task.viewer = 'Bob'
-    task.text_edit()
+    task.description_edit()
 
     print(task)
