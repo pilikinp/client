@@ -1,5 +1,5 @@
 import time
-from utils import act_time
+from base.utils import act_time
 
 status = {0: 'waiting', 1: 'doing', 2: 'done'}  # статус задачи, по умолчанию в ожидании
 
