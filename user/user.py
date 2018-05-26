@@ -22,7 +22,7 @@ class User:
         for key in self.__slots__:
             try:
                 value = getattr(self, key)
-                _dict[key] = value
+                _dict[key.lstrip('_')] = value
             except AttributeError:
                 pass
         return _dict
