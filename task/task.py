@@ -1,5 +1,6 @@
 import time
 from base.utils import act_time
+from comment.comment import Comment
 
 status = {0: 'waiting', 1: 'doing', 2: 'done'}  # статус задачи, по умолчанию в ожидании
 
@@ -8,9 +9,9 @@ class Task:
 
     def __init__(self, creator, viewer=None, name=None):
         '''
-        :param creator: объект класса Пользователь (?) создатель задачи
-        :param viewer: объект класса Пользователь (?) кто просматривает задачу
-        :param task_name: название задачи, если не установленно, то Новая задача
+        :param creator: имя Пользователя, создатель задачи
+        :param viewer: имя Пользователя, кто просматривает задачу
+        :param name: название задачи, если не установленно, то New task
         '''
         self._creator = creator
         self.viewer = viewer
@@ -21,21 +22,21 @@ class Task:
         self.status = 0
         self._performer_user = [creator]  # список пользователей, которым задача сопоставленна
         self._access_users = [creator]  # список пользователе у которых есть доступ к задаче
-        self._comments = dict()
+        self._comments = dict()  # {'User_1': [{'text': text, 'time': time}, {}...], ...}
 
     def __repr__(self):
-        return 'Task: {name} / creator: {creator} / created: {time} / deadline: {deadline}\n \
+        return '>>>>>\nTask: {name} / creator: {creator} / created: {time} / deadline: {deadline}\n \
 status: {status} / description: {description}\n \
 performers: {performers} / access: {access}\n \
-comments: {comments}'.format(name=self._name,
-                             creator=self._creator,
-                             time=act_time(self._time),
-                             deadline=self.deadline_time,
-                             status=self.status,
-                             description=self._description,
-                             performers=self._performer_user,
-                             access=self._access_users,
-                             comments=self._comments)
+comments: {comments}\n>>>>>'.format(name=self._name,
+                                    creator=self._creator,
+                                    time=act_time(self._time),
+                                    deadline=self.deadline_time,
+                                    status=self.status,
+                                    description=self._description,
+                                    performers=self._performer_user,
+                                    access=self._access_users,
+                                    comments=self._comments)
 
     @property
     def creator(self):
@@ -84,13 +85,53 @@ comments: {comments}'.format(name=self._name,
         else:
             self._performer_user.remove(user)
 
+    def add_to_access(self, user):
+        if user not in self._access_users:
+            self._access_users.append(user)
+
+    def del_from_access(self, user):
+        if user == self.creator:
+            print('<Creator could not be removed>')
+        else:
+            self._access_users.remove(user)
+
+    def add_comment(self, comment):
+        '''
+        комментарии оставляют только пользователи из списка self.performer_user и self.access_users
+        :param comment: словарь вида {'text': text, 'time': time, 'user': user} или экземпляр класса Comment
+        :return:
+        '''
+        user = comment._user if isinstance(comment, Comment) else comment['user']
+        text = comment._text if isinstance(comment, Comment) else comment['text']
+        time = comment.time if isinstance(comment, Comment) else comment['time']
+        if user in self._performer_user or user in self._access_users:
+            if user in self._comments:
+                self._comments[user].append({'time': time, 'text': text})
+            else:
+                self._comments[user] = [{'time': time, 'text': text}]
+        else:
+            print('You cannot leave comment here')
+
+    def del_comment(self, comment):
+        pass
+
 
 if __name__ == '__main__':
     task = Task(creator='Jack', viewer='Jack', name='New one')
 
     task.description = 'description of task'
 
-    task.viewer = 'Bob'
-    task.description_edit()
+    task.add_performer('Bob')
+    comment = Comment(user='Bob', text='first comment')
 
+    task.add_comment(comment)
+    task.description_edit()
+    time.sleep(1)
+    comment_1 = {'text': 'second comment', 'time': time.time(), 'user': 'Bob'}
+    task.add_comment(comment_1)
+
+    print(task)
+
+    comment_3 = Comment(user='Jack', text='third comment')
+    task.add_comment(comment_3)
     print(task)
