@@ -22,11 +22,13 @@ class User:
         for key in self.__slots__:
             try:
                 value = getattr(self, key)
-                _dict[key] = value
+                _dict[key.lstrip('_')] = value
             except AttributeError:
                 pass
         return _dict
 
 
 if __name__ == '__main__':
-    pass
+    user = User(name='Bob', password='123')
+    print(user.__slots__)
+    print(user.user_dict)
