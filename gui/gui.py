@@ -30,11 +30,21 @@ class MyWindow(QtWidgets.QMainWindow):
         self.thread.started.connect(self.monitor.recv_msg)
         self.thread.start()
         connect = self.monitor.client.run()
-        if connect:
+        if not connect:
             QtWidgets.QMessageBox.warning(dialog, 'Warning!', 'Not connect')
             sys.exit()
 
-
+    def closeEvent(dialog, e):
+        result = QtWidgets.QMessageBox.question(dialog,
+                       "Confirmation",
+                       "Do you really want to close window with tasks?",
+                       QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                       QtWidgets.QMessageBox.No)
+        if result == QtWidgets.QMessageBox.Yes:
+            e.accept()
+            QtWidgets.QWidget.closeEvent(dialog, e)
+        else:
+            e.ignore()
 
     @staticmethod
     def fields_checker(name, password, dialog):
