@@ -29,6 +29,4 @@ class User:
 
 
 if __name__ == '__main__':
-    user = User(name='Bob', password='123')
-    print(user.__slots__)
-    print(user.user_dict)
+    pass
