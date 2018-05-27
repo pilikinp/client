@@ -17,12 +17,12 @@ class Task:
         self.viewer = viewer
         self._name = 'New task' if not name else name  # если задача с таким именем уже есть добавить суффикс _1(2, 3...)
         self._description = None
-        self._time = time.time()
-        self.deadline_time = None
-        self.status = 0
+        self._time = time.time()  # время создания
+        self._deadline_time = None  # срок исполнения
+        self._status = 0
         self._performer_user = [creator]  # список пользователей, которым задача сопоставленна
         self._access_users = [creator]  # список пользователе у которых есть доступ к задаче
-        self._comments = dict()  # {'User_1': [{'text': text, 'time': time}, {}...], ...}
+        self.comments = dict()  # {'User_1': [{'text': text, 'time': time}, {}...], ...}
 
     def __repr__(self):
         return '>>>>>\nTask: {name} / creator: {creator} / created: {time} / deadline: {deadline}\n \
@@ -36,7 +36,7 @@ comments: {comments}\n>>>>>'.format(name=self._name,
                                     description=self._description,
                                     performers=self._performer_user,
                                     access=self._access_users,
-                                    comments=self._comments)
+                                    comments=self.comments)
 
     @property
     def creator(self):
@@ -46,9 +46,16 @@ comments: {comments}\n>>>>>'.format(name=self._name,
     def creator(self, value=None):
         print("<Creator couldn't be set>")
 
-    @creator.getter
-    def creator(self):
-        return self._creator
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, name):
+        if self._creator != self.viewer:
+            print('<Only creator could change name>')
+        else:
+            self._name = name
 
     @property
     def description(self):
@@ -74,26 +81,86 @@ comments: {comments}\n>>>>>'.format(name=self._name,
         # переопределяем соответствующее поле
         self.description = edited_description
 
-    # добавление исполнителя
+    @property
+    def status(self):
+        return self._status
+
+    @status.setter
+    def status(self, value: int):
+        '''
+        Поменять статус может любой из списка исполнителей или доступа
+        :param value: статус задачи: 0 - в очереди, 1 - выполняется, 2 - сделана
+        :return:
+        '''
+        if self.viewer in self._performer_user or self.viewer in self._access_users:
+            self._status = value
+        else:
+            print('You have not access to edit status')
+
+    @property
+    def deadline_time(self):
+        return self._deadline_time
+
+    @deadline_time.setter
+    def deadline_time(self, value):
+        if self.viewer in self._performer_user or self.viewer in self._access_users:
+            self._deadline_time = value
+        else:
+            print('You have not access to edit deadline')
+
+    @property
+    def performer_user(self):
+        if self.viewer in self._performer_user or self.viewer in self._access_users:
+            return self._performer_user
+        else:
+            print('You have not access to edit performers')
+            return False
+
     def add_performer(self, user):
-        if user not in self._performer_user:
-            self._performer_user.append(user)
+        '''
+        Добавлять исполнителей может любой из списка исполнителей или из доступа к задаче
+        :param user:
+        :return:
+        '''
+        if self.performer_user:
+            if user not in self._performer_user:
+                self.performer_user.append(user)
 
     def del_performer(self, user):
-        if user == self.creator:
-            print('<Creator could not be removed>')
+        """
+        Удалять исполниетелей может любой из списка исполнителей или из доступа к задаче
+        создателя удалить нельзя (это надо обсудить)
+        :param user:
+        :return:
+        """
+        if self.performer_user:
+            if user == self.creator:
+                print('<Creator could not be removed>')
+            else:
+                try:
+                    self.performer_user.remove(user)
+                except ValueError:
+                    pass
+
+    @property
+    def access_users(self):
+        if self.viewer in self._access_users:
+            return self._access_users
         else:
-            self._performer_user.remove(user)
+            print('You have not access to edit access list')
+            return False
 
     def add_to_access(self, user):
-        if user not in self._access_users:
-            self._access_users.append(user)
+        if self.access_users:
+            if user not in self._access_users:
+                self._access_users.append(user)
 
     def del_from_access(self, user):
-        if user == self.creator:
-            print('<Creator could not be removed>')
-        else:
-            self._access_users.remove(user)
+        if self.access_users:
+            if user == self.creator:
+                print('<Creator could not be removed>')
+            else:
+                self._access_users.remove(user)
 
     def add_comment(self, comment):
         '''
@@ -101,37 +168,29 @@ comments: {comments}\n>>>>>'.format(name=self._name,
         :param comment: словарь вида {'text': text, 'time': time, 'user': user} или экземпляр класса Comment
         :return:
         '''
-        user = comment._user if isinstance(comment, Comment) else comment['user']
-        text = comment._text if isinstance(comment, Comment) else comment['text']
-        time = comment.time if isinstance(comment, Comment) else comment['time']
+        user = comment.user if isinstance(comment, Comment) else comment['user']
+        text = comment.text if isinstance(comment, Comment) else comment['text']
+        time_ = comment.time if isinstance(comment, Comment) else comment['time']
         if user in self._performer_user or user in self._access_users:
-            if user in self._comments:
-                self._comments[user].append({'time': time, 'text': text})
+            if user in self.comments:
+                self.comments[user].append({'time': time_, 'text': text})
             else:
-                self._comments[user] = [{'time': time, 'text': text}]
+                self.comments[user] = [{'time': time_, 'text': text}]
         else:
             print('You cannot leave comment here')
 
     def del_comment(self, comment):
-        pass
+        '''
+        :param comment: словарь вида {'text': text, 'time': time}, из self._comments[viewer]
+        :return:
+        '''
+        if self.viewer in self.comments:
+            for comm in self.comments[self.viewer]:
+                if comm == comment:
+                    self.comments[self.viewer].remove(comm)
+                    return
 
 
 if __name__ == '__main__':
-    task = Task(creator='Jack', viewer='Jack', name='New one')
+    pass
 
-    task.description = 'description of task'
-
-    task.add_performer('Bob')
-    comment = Comment(user='Bob', text='first comment')
-
-    task.add_comment(comment)
-    task.description_edit()
-    time.sleep(1)
-    comment_1 = {'text': 'second comment', 'time': time.time(), 'user': 'Bob'}
-    task.add_comment(comment_1)
-
-    print(task)
-
-    comment_3 = Comment(user='Jack', text='third comment')
-    task.add_comment(comment_3)
-    print(task)
