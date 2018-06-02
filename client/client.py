@@ -1,9 +1,12 @@
+import logging
 import time, sys
 import socket
 import threading, queue
 import hashlib
 
 from jim.convert import json_to_bytes, bytes_to_json
+
+logger = logging.getLogger('root')
 
 class Client():
 
@@ -88,7 +91,7 @@ class Client():
         try:
             self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.connect((self._host, self._port))
-            print('подключился к {}:{}'.format(self._host, self._port))
+            logger.debug('Client is connected to server: {}:{}'.format(self._host, self._port))
             self.start_thread()
         except:
             return 'Сервер не отвечает'
