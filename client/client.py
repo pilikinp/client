@@ -7,6 +7,7 @@ import hashlib
 from jim.convert import json_to_bytes, bytes_to_json
 
 logger = logging.getLogger('root')
+send_queue = queue.Queue()
 
 class Client():
 
@@ -17,52 +18,19 @@ class Client():
         self._port = port
         self.lock = threading.Lock()
         self.recv_queue = queue.Queue()
-        self.secret = 'secretkey'
+        self.send_queue = send_queue
 
     @property
     def socket(self):
         return self._sock
 
-    def connect_guest(self, name, password):
-        # Функция авторизации пользователя
-        pass
-
-    def registration(self, name, password, email):
-        pas = hashlib.sha256()
-        pas.update(self.username.encode())
-        pas.update(password.encode())
-        pas.update(self.secret.encode())
-        password = pas.hexdigest()
-        message = {
-            "head": {
-                "type": "action",
-                "name": "registration"
-            },
-            "body": {
-                "name": name,
-                "password": password
-            }
-        }
-        message = json_to_bytes(message)
-        self.socket.send(message)
-
-    def check_user(self, name):
-        message = {
-            "head": {
-                "type": "action",
-                "name": "check_user"
-            },
-            "body": {
-                "name": name
-            }
-        }
-        msg = json_to_bytes(message)
-        # time.sleep(0.2)  # непонятная задержка которая нужна при JSON
-        self.socket.send(msg)
-
-    def add_task(self):
-        # функция добавления задачи
-        pass
+    def _send_message(self):
+        while 1:
+            data = self.send_queue.get()
+            if data:
+                msg = json_to_bytes(data)
+                self.socket.send(msg)
+            self.send_queue.task_done()
 
 
     def _get_message(self):
@@ -82,8 +50,11 @@ class Client():
                 pass
 
     def start_thread(self):
+        t1 = threading.Thread(target=self._send_message)
         t2 = threading.Thread(target=self._get_message)
+        t1.daemon = True
         t2.daemon = True
+        t1.start()
         t2.start()
 
 
