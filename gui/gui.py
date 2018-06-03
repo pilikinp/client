@@ -1,12 +1,15 @@
 import sys
 
 from PyQt5 import QtCore, QtWidgets, uic, QtGui
-from gui.main_form import Ui_MainWindow as ui_class
+from gui.templates.main_form import Ui_MainWindow as ui_class
 
 from gui.monitor import Monitor
 from function.check import check_user
 from function.registration import registration as registr
 
+#импорты окон, если получится разделить ГУИ
+# from gui.sign_wind import SignWind
+# from gui.reg_wind import SignUpWind
 
 class MyWindow(QtWidgets.QMainWindow):
 
@@ -24,7 +27,8 @@ class MyWindow(QtWidgets.QMainWindow):
         self.monitor.gotCheck.connect(self.update_console)
         self.monitor.gotError.connect(self.update_error)
 
-        self.sign_in()
+        # self.sign_in()
+        self.ui.action_login.triggered.connect(self.sign_in)
 
     def start_monitor(self, dialog):
         self.monitor.moveToThread(self.thread)
@@ -60,7 +64,7 @@ class MyWindow(QtWidgets.QMainWindow):
             dialog.accept()
 
     def registration(self):
-        dialog_reg = uic.loadUi('gui/sign_up.ui')
+        dialog_reg = uic.loadUi('gui/templates/sign_up.ui')
         dialog_reg.login.setFocus()
         dialog_reg.flag = None
 
@@ -94,15 +98,17 @@ class MyWindow(QtWidgets.QMainWindow):
 
 
         self.monitor.gotCheck.connect(label_check_user)
-        dialog_reg.login.textChanged.connect(lambda: check_login())
+        dialog_reg.login.textChanged.connect(check_login)
         dialog_reg.ok.clicked.connect(reg)
         dialog_reg.cancel.clicked.connect(dialog_reg.close)
         dialog_reg.cancel.clicked.connect(self.sign_in)
         dialog_reg.exec()
 
     def sign_in(self):
-
-        dialog = uic.loadUi('gui/sign_in.ui')
+        #следующие две сстрочки это пока попытка разделить gui
+        # dialog = SignWind(self.monitor)
+        # dialog.exec()
+        dialog = uic.loadUi('gui/templates/sign_in.ui')
         dialog.login.setFocus()
 
         def login():
@@ -117,7 +123,7 @@ class MyWindow(QtWidgets.QMainWindow):
         dialog.exec()
 
     def on_createTask_pressed(self):
-        dialog = uic.loadUi('gui/task_create.ui')
+        dialog = uic.loadUi('gui/templates/task_create.ui')
         dialog.topic.setFocus()
 
         def task_create():
